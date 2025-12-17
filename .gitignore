@@ -1,0 +1,91 @@
+# Node
+node_modules/
+packages/**/node_modules/
+.pnpm-debug.log
+.pnpm-store/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Build output
+dist/
+build/
+out/
+.*/dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+.env.local
+.env.test
+
+# Vite / bundlers
+.vite/
+.cache/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.tgz
+*.zip
+
+# Optional: lockfiles from other package managers
+package-lock.json
+yarn.lock
+
+# Local temporary files
+tmp/
+temp/
+
+# Local development credentials / DB
+*.sqlite
+*.db
+
+# JetBrains
+/.idea
+
+# Serverless
+.serverless/
+
+# Docker
+docker-compose.override.yml
+
+# Ignore build outputs in packages
+packages/**/dist/
+packages/**/build/
+
+# Ignore test output
+coverage/
+
+# Keep pnpm lockfile (committed), but ignore pnpm store
+# (pnpm-lock.yaml should be kept)
+
+# End of file

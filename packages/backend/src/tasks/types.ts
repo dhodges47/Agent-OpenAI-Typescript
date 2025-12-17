@@ -1,0 +1,23 @@
+export type AgentId = "pgQuery";
+
+export type TaskId = "agentChat" | "runPgQuery";
+
+
+export type TaskRequest =
+  | {
+    taskId: "agentChat";
+    agentId: string;
+    threadId: string;
+    input: { userText: string };
+  }
+  | {
+    taskId: "runPgQuery";
+    input: { sql: string };
+  };
+  
+export type TaskResult = {
+  ok: boolean;
+  data?: { assistantText: string };
+  error?: string;
+};
+export type TaskRequestById<T extends TaskId> = Extract<TaskRequest, { taskId: T }>;

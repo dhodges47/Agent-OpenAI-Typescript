@@ -9,15 +9,17 @@ export default function App() {
   const { agents, loading } = useAgents(BACKEND_URL);
   const [agentId, setAgentId] = useState<string | null>(null);
   const [threadId, setThreadId] = useState(() => crypto.randomUUID());
+  const [taskId, setTaskId] = useState<string | null>(null);
 
-  function onPickAgent(next: string) {
-    setAgentId(next);
+  function onPickAgent(agentId: string, taskId: string) {
+    setAgentId(agentId);
     setThreadId(crypto.randomUUID());
+    setTaskId(taskId);
   }
 
   if (loading) return <div>Loading agents…</div>;
   if (!agentId && agents.length > 0) {
-    onPickAgent(agents[0].agentId);
+    onPickAgent(agents[0].agentId, agents[0].taskId);
   }
 
   return (
@@ -34,6 +36,7 @@ export default function App() {
         backendUrl={BACKEND_URL}
         agentId={agentId!}
         threadId={threadId}
+        taskId={taskId!}
       />
     </div>
   );

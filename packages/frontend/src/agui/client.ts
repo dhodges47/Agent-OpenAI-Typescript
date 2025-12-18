@@ -1,6 +1,6 @@
 export async function runAgentTaskSSE(args: {
   backendUrl: string;
-  taskId: "agentChat";
+  taskId: string;
   agentId: string;
   threadId: string;
   input: any;

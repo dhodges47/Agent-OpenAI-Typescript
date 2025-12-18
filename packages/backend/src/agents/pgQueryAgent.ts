@@ -45,31 +45,31 @@ export function pgQueryAgent() {
       return res.rows;
     },
   });
+const SqlParam = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
   const pgReadonlyQuery = tool({
-    name: "pg_readonly_query",
-    description: "Run a read-only SQL query (SELECT/WITH only) against Postgres and return rows.",
-    parameters: z.object({
-      sql: z.string(),
-      params: z.array(z.any()).default([]),
-      limit: z.number().int().min(1).max(200).default(50),
-    }),
-    execute: async ({ sql, params, limit }) => {
-      const lowered = sql.trim().toLowerCase();
-      if (!lowered.startsWith("select") && !lowered.startsWith("with")) {
-        throw new Error("Read-only mode: only SELECT/WITH queries are allowed.");
-      }
-      const res = await pool.query(sql, params ?? []);
-      return res.rows.slice(0, limit);
-    },
-  });
+  name: "pg_readonly_query",
+  description: "Run a read-only SQL query (SELECT/WITH only) against Postgres and return rows.",
+  parameters: z.object({
+    sql: z.string(),
+    params: z.array(SqlParam).default([]),
+    limit: z.number().int().min(1).max(200).default(50),
+  }),
+  execute: async ({ sql, params, limit }) => {
+    const lowered = sql.trim().toLowerCase();
+    if (!lowered.startsWith("select") && !lowered.startsWith("with")) {
+      throw new Error("Read-only mode: only SELECT/WITH queries are allowed.");
+    }
+    const res = await pool.query(sql, params ?? []);
+    return res.rows.slice(0, limit);
+  },
+});
 
   const client = getOpenAIClient();
 
   return new Agent({
     name: "Postgres Query Agent",
     model: env.LLM_MODEL,
-    openai: client as any,
     tools: [pgIntrospectSchema, pgReadonlyQuery],
     instructions: [
       "You help the user explore a Postgres database.",

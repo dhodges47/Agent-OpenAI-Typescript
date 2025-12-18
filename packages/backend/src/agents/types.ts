@@ -3,4 +3,5 @@ export type AgentDescriptor = {
   name: string;
   description: string;
   capabilities: string[];
+  taskId: string;
 };

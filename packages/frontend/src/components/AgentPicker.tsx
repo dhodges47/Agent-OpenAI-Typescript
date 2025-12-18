@@ -3,7 +3,7 @@ import type { AgentInfo } from "../hooks/useAgents";
 export function AgentPicker(props: {
   agents: AgentInfo[];
   agentId: string;
-  setAgentId: (v: string) => void;
+  setAgentId: (v: string, taskId: string) => void;
 }) {
   const selected = props.agents.find(a => a.agentId === props.agentId);
 
@@ -11,7 +11,14 @@ export function AgentPicker(props: {
     <label style={{ display: "grid", gap: 6 }}>
       <span>Agent</span>
 
-      <select value={props.agentId} onChange={(e) => props.setAgentId(e.target.value)}>
+      <select
+        value={props.agentId}
+        onChange={(e) => {
+          const nextId = e.target.value;
+          const nextAgent = props.agents.find(a => a.agentId === nextId);
+          props.setAgentId(nextId, nextAgent?.taskId ?? "");
+        }}
+      >
         {props.agents.map(a => (
           <option key={a.agentId} value={a.agentId}>
             {a.name}

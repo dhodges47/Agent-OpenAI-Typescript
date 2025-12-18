@@ -8,6 +8,7 @@ export async function runPgQueryTask(
   req: TaskRequestById<"runPgQuery">
 ): Promise<TaskResult> {
   try {
+    console.log("runPgQueryTask req:", req);
     const agent = agents["pgQuery"];
 
     const runner = new Runner();

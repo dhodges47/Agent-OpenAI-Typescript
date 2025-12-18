@@ -70,7 +70,9 @@ Current notable tools:
 
 ```bash
 pnpm install
-pnpm -r dev
+pnpm dev:frontend
+// in a new browser:
+pnpm dev:backend
 ```
 - Backend (Express): http://localhost:8787
 - Frontend (Vite): usually http://localhost:5173

@@ -8,12 +8,14 @@ export const agentDefinitions = {
     description: "General-purpose assistant for conversational help and local context.",
     capabilities: ["conversational", "summarize-results"],
     factory: agentChatAgent,
+    taskId: "agentChat"
   },
   pgQuery: {
     name: "Postgres Query Agent",
     description: "Explore the Postgres database using read-only queries and schema introspection.",
     capabilities: ["read-db", "schema-introspection", "summarize-results"],
     factory: pgQueryAgent,
+    taskId: "runPgQuery"
   },
   // later:
   // engineAdmin: { capabilities: ["read-db","schema-introspection","write-engine-domain"] ... }
@@ -32,5 +34,6 @@ export function listAgents(): AgentDescriptor[] {
     name: def.name,
     description: def.description,
     capabilities: [...def.capabilities],
+    taskId: def.taskId
   }));
 }

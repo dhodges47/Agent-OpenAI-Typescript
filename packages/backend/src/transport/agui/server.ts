@@ -3,7 +3,7 @@ import { z } from "zod";
 import { runTask } from "../../runner/runTask";
 
 const Body = z.object({
-  taskId: z.literal("agentChat"),
+  taskId: z.string(),
   agentId: z.string(),
   threadId: z.string(),
   input: z.object({
@@ -40,13 +40,15 @@ function sseEvent(res: Response, event: string, data: any) {
 }
 
 export async function aguiHandler(req: Request, res: Response) {
+  console.log("AGUI Handler called");
   sseInit(res);
 
   try {
+    console.log("Checking req.body:", req.body);
     const body = Body.parse(req.body);
-
+console.log("Parsed body:", body);
     sseEvent(res, "run.started", { agentId: body.agentId, taskId: body.taskId, threadId: body.threadId });
-
+    console.log("runTask", body);
     const result = await runTask(body as any);
 
     if (!result.ok) {

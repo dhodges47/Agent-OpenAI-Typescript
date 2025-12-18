@@ -4,7 +4,7 @@ import { runAgentTaskSSE } from "../agui/client";
 type Msg = { role: "user" | "assistant"; text: string };
 
 export function ChatPanel(props: { backendUrl: string; agentId: string; threadId: string; taskId: string }) {
-  const [input, setInput] = useState("What tables are available in the Engine Database?");
+  const [input, setInput] = useState("What tables are available in the espec Database?");
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [running, setRunning] = useState(false);
 
@@ -15,7 +15,7 @@ export function ChatPanel(props: { backendUrl: string; agentId: string; threadId
     setMsgs(prev => [...prev, { role: "user", text: userText }, { role: "assistant", text: "" }]);
     setInput("");
     setRunning(true);
-console.log("runAgentTaskSSE, props", props);
+    console.log("runAgentTaskSSE, props", props);
     await runAgentTaskSSE({
       backendUrl: props.backendUrl,
       taskId: props.taskId,

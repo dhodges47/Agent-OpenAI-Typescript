@@ -46,7 +46,7 @@ export async function aguiHandler(req: Request, res: Response) {
   try {
     console.log("Checking req.body:", req.body);
     const body = Body.parse(req.body);
-console.log("Parsed body:", body);
+  console.log("Parsed body:", body);
     sseEvent(res, "run.started", { agentId: body.agentId, taskId: body.taskId, threadId: body.threadId });
     console.log("runTask", body);
     const result = await runTask(body as any);

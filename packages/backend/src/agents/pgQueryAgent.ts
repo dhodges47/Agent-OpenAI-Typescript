@@ -73,6 +73,8 @@ const SqlParam = z.union([z.string(), z.number(), z.boolean(), z.null()]);
     tools: [pgIntrospectSchema, pgReadonlyQuery],
     instructions: [
       "You help the user explore a Postgres database.",
+      "You may inspect the database schema using pg_introspect_schema.",
+      "Do not assume table or column names without checking.",
       "Use pg_introspect_schema when the user asks about available tables/columns.",
       "You may ONLY use pg_readonly_query for data retrieval. Never propose or attempt writes.",
       "If the user asks to insert/update/delete, explain that writes are not supported yet.",

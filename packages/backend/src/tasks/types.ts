@@ -12,7 +12,9 @@ export type TaskRequest =
   }
   | {
     taskId: "runPgQuery";
-    input: { sql: string };
+     agentId: string;
+    threadId: string;
+    input: { userText: string };
   };
   
 export type TaskResult = {

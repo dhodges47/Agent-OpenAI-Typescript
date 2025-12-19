@@ -1,0 +1,4 @@
+TODO:
+1) Add a Model selector
+2) Add thought bubbles
+3) Add a way to terminate a query

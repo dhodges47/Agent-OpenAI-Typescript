@@ -1,9 +1,7 @@
-import type { TaskRequest, TaskResult, TaskRequestById } from "./types";
+import type { TaskRequestById, TaskResult } from "./types";
 import { agents } from "../agents/registry";
-import { Runner } from "@openai/agents"; // :contentReference[oaicite:9]{index=9}
-import { extractFinalText } from "../runner/extractFinalText";
-
-
+import { Runner } from "@openai/agents";
+import { extractFinalStructured } from "../runner/extractFinalStructured";
 
 export async function runPgQueryTask(
   req: TaskRequestById<"runPgQuery">
@@ -15,19 +13,12 @@ export async function runPgQueryTask(
     const runner = new Runner();
 
     const userMessage = `${req.input.userText}`;
-console.log("runPgQueryTask userMessage:", userMessage);
-//let userMessage = "List the names of all tables in the espec schema.";
+    console.log("runPgQueryTask userMessage:", userMessage);
     const result = await runner.run(agent, userMessage);
 
-    // normalize output to the expected TaskResult shape { assistantText: string }
-    const normalizeOutput = (out: any): string => {
-      if (typeof out === "string") return out;
-      if (Array.isArray(out)) return out.map(o => (typeof o === "string" ? o : JSON.stringify(o))).join("\n");
-      try { return JSON.stringify(out); } catch { return String(out); }
-    };
-const assistantText = extractFinalText(result);
-console.log("runPgQueryTask assistantText:", assistantText);
-   // return { ok: true, data: { assistantText: extractFinalText(normalizeOutput(result.output) ) } };
+    const assistantText = extractFinalStructured(result);
+    console.log("runPgQueryTask assistantText:", assistantText);
+
     return { ok: true, data: { assistantText } };
   } catch (e: any) {
     return { ok: false, error: e?.message ?? "Unknown error" };

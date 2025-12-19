@@ -10,6 +10,7 @@ export default function App() {
   const [agentId, setAgentId] = useState<string | null>(null);
   const [threadId, setThreadId] = useState(() => crypto.randomUUID());
   const [taskId, setTaskId] = useState<string | null>(null);
+  const currentYear = new Date().getFullYear();
 
   function onPickAgent(agentId: string, taskId: string) {
     setAgentId(agentId);
@@ -17,27 +18,48 @@ export default function App() {
     setTaskId(taskId);
   }
 
-  if (loading) return <div>Loading agents…</div>;
+  function onNewThread() {
+    setThreadId(crypto.randomUUID());
+  }
+
+  if (loading) return <div className="app-loading">Loading agents...</div>;
   if (!agentId && agents.length > 0) {
     onPickAgent(agents[0].agentId, agents[0].taskId);
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: "40px auto", display: "grid", gap: 16 }}>
-      <h1>Agents (v1)</h1>
+    <div className="app">
+      <div className="app-shell">
+        <main className="app-card">
+          <header className="app-header">
+            <div className="app-kicker">Autonomous Intelligence Suite</div>
+            <h1 className="app-title">
+              ESPEC Agents <span className="app-version">v1</span>
+            </h1>
+            <div className="app-subtitle">
+              Secure, auditable AI agent workflows for critical operations.
+            </div>
+          </header>
 
-      <AgentPicker
-        agents={agents}
-        agentId={agentId!}
-        setAgentId={onPickAgent}
-      />
+          <AgentPicker
+            agents={agents}
+            agentId={agentId!}
+            setAgentId={onPickAgent}
+          />
 
-      <ChatPanel
-        backendUrl={BACKEND_URL}
-        agentId={agentId!}
-        threadId={threadId}
-        taskId={taskId!}
-      />
+          <ChatPanel
+            backendUrl={BACKEND_URL}
+            agentId={agentId!}
+            threadId={threadId}
+            taskId={taskId!}
+            onNewThread={onNewThread}
+          />
+        </main>
+
+        <footer className="app-footer">
+          ALL RIGHTS RESERVED &copy;GT-Edge, LLC {currentYear}
+        </footer>
+      </div>
     </div>
   );
 }

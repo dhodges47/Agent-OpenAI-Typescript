@@ -5,21 +5,22 @@ export function AgentPicker(props: {
   agentId: string;
   setAgentId: (v: string, taskId: string) => void;
 }) {
-  const selected = props.agents.find(a => a.agentId === props.agentId);
+  const selected = props.agents.find((a) => a.agentId === props.agentId);
 
   return (
-    <label style={{ display: "grid", gap: 6 }}>
-      <span>Agent</span>
+    <label className="agent-picker">
+      <span className="agent-label">Agent</span>
 
       <select
+        className="agent-select"
         value={props.agentId}
         onChange={(e) => {
           const nextId = e.target.value;
-          const nextAgent = props.agents.find(a => a.agentId === nextId);
+          const nextAgent = props.agents.find((a) => a.agentId === nextId);
           props.setAgentId(nextId, nextAgent?.taskId ?? "");
         }}
       >
-        {props.agents.map(a => (
+        {props.agents.map((a) => (
           <option key={a.agentId} value={a.agentId}>
             {a.name}
           </option>
@@ -27,20 +28,12 @@ export function AgentPicker(props: {
       </select>
 
       {selected && (
-        <div style={{ display: "grid", gap: 6 }}>
-          <small style={{ color: "#555" }}>{selected.description}</small>
+        <div className="agent-details">
+          <small className="agent-desc">{selected.description}</small>
 
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <div className="agent-tags">
             {selected.capabilities.map((c) => (
-              <span
-                key={c}
-                style={{
-                  fontSize: 12,
-                  border: "1px solid #ccc",
-                  padding: "2px 8px",
-                  borderRadius: 999,
-                }}
-              >
+              <span key={c} className="agent-tag">
                 {c}
               </span>
             ))}

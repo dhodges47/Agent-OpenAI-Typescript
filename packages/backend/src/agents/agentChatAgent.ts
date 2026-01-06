@@ -4,7 +4,7 @@ import { getOpenAIClient } from "../llm/provider";
 
 export function agentChatAgent() {
   const client = getOpenAIClient();
-
+console.log("using chat agent with model:", env.LLM_MODEL);
   return new Agent({
     name: "Agent Chat",
     model: env.LLM_MODEL,

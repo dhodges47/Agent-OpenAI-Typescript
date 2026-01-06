@@ -4,6 +4,8 @@ import { appendMessage, getMessages } from "../runner/threadStore";
 import { Runner } from "@openai/agents";
 import { extractFinalText } from "../runner/extractFinalText";
 import { normalizeMessagesForAgent } from "../runner/normalizeMessages";
+import { env } from "../config/env";
+import { getRunner } from "../runner/getRunner"
 
 export async function runAgentChatTask(
   req: TaskRequestById<"agentChat">
@@ -13,9 +15,11 @@ export async function runAgentChatTask(
 
     appendMessage(req.threadId, { role: "user", content: req.input.userText });
 
-    const runner = new Runner();
+     const runner = getRunner(env.LLM_PROVIDER, env.LLM_MODEL);
     const history = getMessages(req.threadId);
     const normalizedHistory = normalizeMessagesForAgent(history);
+    
+    
     const result = await runner.run(agent, normalizedHistory as any);
 
     const assistantText = extractFinalText(result);

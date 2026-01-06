@@ -1,16 +1,17 @@
 import type { TaskRequestById, TaskResult } from "./types";
-import { agents } from "../agents/registry";
-import { Runner } from "@openai/agents";
+import { pgQueryAgent } from "../agents/pgQueryAgent";
 import { extractFinalStructured } from "../runner/extractFinalStructured";
+import { getRunner } from "../runner/getRunner"
+import { resolveLlmSelection } from "../llm/options";
 
 export async function runPgQueryTask(
   req: TaskRequestById<"runPgQuery">
 ): Promise<TaskResult> {
   try {
     console.log("runPgQueryTask req:", req);
-    const agent = agents["pgQuery"];
-
-    const runner = new Runner();
+    const { provider, model } = resolveLlmSelection(req.input.llm);
+    const agent = pgQueryAgent(model);
+    const runner = getRunner(provider, model);
 
     const userMessage = `${req.input.userText}`;
     console.log("runPgQueryTask userMessage:", userMessage);

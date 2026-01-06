@@ -8,13 +8,13 @@ export type TaskRequest =
     taskId: "agentChat";
     agentId: string;
     threadId: string;
-    input: { userText: string };
+    input: { userText: string; llm?: { provider?: string; model?: string } };
   }
   | {
     taskId: "runPgQuery";
      agentId: string;
     threadId: string;
-    input: { userText: string };
+    input: { userText: string; llm?: { provider?: string; model?: string } };
   };
   
 export type TaskResult = {

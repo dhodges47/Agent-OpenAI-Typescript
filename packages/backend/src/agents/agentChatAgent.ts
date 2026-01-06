@@ -1,13 +1,12 @@
 import { Agent } from "@openai/agents";
 import { env } from "../config/env";
-import { getOpenAIClient } from "../llm/provider";
 
-export function agentChatAgent() {
-  const client = getOpenAIClient();
-console.log("using chat agent with model:", env.LLM_MODEL);
+export function agentChatAgent(model?: string) {
+  const resolvedModel = model ?? env.LLM_MODEL;
+  console.log("using chat agent with model:", resolvedModel);
   return new Agent({
     name: "Agent Chat",
-    model: env.LLM_MODEL,
+    model: resolvedModel,
     tools: [],
     instructions: [
       "You are a concise, friendly assistant for general troubleshooting and brainstorming.",

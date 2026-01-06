@@ -33,9 +33,9 @@ export function getRunner(provider: LlmProvider, model: string) {
 
   const client = makeOpenAIClient(provider);
 
-  // Use Chat Completions compatible API (good for OpenRouter). You can also use Responses API.
+  // OpenAI models like gpt-5.x require the Responses API; OpenRouter expects chat_completions.
   // The SDK supports switching which OpenAI API it uses. :contentReference[oaicite:5]{index=5}
-  setOpenAIAPI("chat_completions");
+  setOpenAIAPI(provider === "openai" ? "responses" : "chat_completions");
 
   const modelProvider = new OpenAIProvider({
     // docs + community examples use openAIClient here

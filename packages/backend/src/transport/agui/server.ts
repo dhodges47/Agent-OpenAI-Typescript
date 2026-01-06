@@ -8,6 +8,12 @@ const Body = z.object({
   threadId: z.string(),
   input: z.object({
     userText: z.string(),
+    llm: z
+      .object({
+        provider: z.string().optional(),
+        model: z.string().optional(),
+      })
+      .optional(),
   }),
 });
 

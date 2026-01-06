@@ -14,6 +14,8 @@ const Env = z.object({
 
   // model name is provider-specific; keep it configurable
   LLM_MODEL: z.string().default("gpt-5-mini"),
+  LLM_PROVIDER_OPTIONS: z.string().optional(),
+  LLM_MODEL_OPTIONS: z.string().optional(),
 });
 
 export const env = Env.parse(process.env);

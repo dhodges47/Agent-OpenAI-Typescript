@@ -1,10 +1,9 @@
 import { z } from "zod";
 import { pool } from "../db/pool";
 import { env } from "../config/env";
-import { getOpenAIClient } from "../llm/provider";
 import { Agent, tool } from "@openai/agents";
 
-export function pgQueryAgent() {
+export function pgQueryAgent(model?: string) {
   const pgIntrospectSchema = tool({
     name: "pg_introspect_schema",
     description:
@@ -65,11 +64,11 @@ const SqlParam = z.union([z.string(), z.number(), z.boolean(), z.null()]);
   },
 });
 
-  const client = getOpenAIClient();
+  const resolvedModel = model ?? env.LLM_MODEL;
 
   return new Agent({
     name: "Postgres Query Agent",
-    model: env.LLM_MODEL,
+    model: resolvedModel,
     tools: [pgIntrospectSchema, pgReadonlyQuery],
     instructions: [
       "You help the user explore a Postgres database.",

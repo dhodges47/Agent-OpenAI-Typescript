@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { runAgentTaskSSE } from "../agui/client";
 
 type Msg = { role: "user" | "assistant"; text: string; at: string };
+type LlmOptions = { provider: string; model: string; providers: string[]; models: string[] };
 
 type ChatPanelProps = {
   backendUrl: string;
@@ -17,6 +18,32 @@ export function ChatPanel(props: ChatPanelProps) {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [running, setRunning] = useState(false);
   const [lastLatencyMs, setLastLatencyMs] = useState<number | null>(null);
+  const [llmOptions, setLlmOptions] = useState<LlmOptions | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState("");
+  const [selectedModel, setSelectedModel] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadLlmOptions() {
+      try {
+        const res = await fetch(`${props.backendUrl}/llm-options`);
+        if (!res.ok) throw new Error(`Failed to load LLM options (${res.status})`);
+        const data = (await res.json()) as LlmOptions;
+        if (cancelled) return;
+        setLlmOptions(data);
+        setSelectedProvider(data.provider);
+        setSelectedModel(data.model);
+      } catch (err) {
+        console.error("Failed to load LLM options", err);
+      }
+    }
+
+    loadLlmOptions();
+    return () => {
+      cancelled = true;
+    };
+  }, [props.backendUrl]);
 
   function formatTime() {
     return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -32,6 +59,13 @@ export function ChatPanel(props: ChatPanelProps) {
   async function send() {
     const userText = input.trim();
     if (!userText) return;
+    const llm =
+      selectedProvider || selectedModel
+        ? {
+            provider: selectedProvider || undefined,
+            model: selectedModel || undefined,
+          }
+        : undefined;
 
     const startTime = performance.now();
     const timestamp = formatTime();
@@ -49,7 +83,7 @@ export function ChatPanel(props: ChatPanelProps) {
       taskId: props.taskId,
       agentId: props.agentId,
       threadId: props.threadId,
-      input: { userText },
+      input: { userText, ...(llm ? { llm } : {}) },
       onText: (t) => {
         setMsgs((prev) => {
           const copy = [...prev];
@@ -93,6 +127,41 @@ export function ChatPanel(props: ChatPanelProps) {
             <strong>{lastLatencyMs === null ? "--" : `${lastLatencyMs} ms`}</strong>
           </div>
         </div>
+        {llmOptions && (
+          <div className="chat-llm">
+            <div className="chat-llm-title">LLM</div>
+            <div className="chat-llm-row">
+              <label className="chat-llm-field">
+                <span>Provider</span>
+                <select
+                  value={selectedProvider}
+                  onChange={(e) => setSelectedProvider(e.target.value)}
+                  disabled={running}
+                >
+                  {llmOptions.providers.map((provider) => (
+                    <option key={provider} value={provider}>
+                      {provider}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="chat-llm-field">
+                <span>Model</span>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  disabled={running}
+                >
+                  {llmOptions.models.map((model) => (
+                    <option key={model} value={model}>
+                      {model}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
+        )}
         <div className="chat-status-actions">
           <button className="chat-clear" onClick={clearChat} disabled={running}>
             New Chat

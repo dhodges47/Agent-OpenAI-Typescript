@@ -71,7 +71,7 @@ Current notable tools:
 ```bash
 pnpm install
 pnpm dev:frontend
-// in a new browser:
+// in a new terminal:
 pnpm dev:backend
 ```
 - Backend (Express): http://localhost:8787

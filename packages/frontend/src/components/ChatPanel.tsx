@@ -110,7 +110,16 @@ export function ChatPanel(props: ChatPanelProps) {
               <span className="chat-role">{m.role}</span>
               <span className="chat-time">{m.at}</span>
             </div>
-            <div className="chat-text">{m.text}</div>
+            <div className="chat-text">
+              {m.text}
+              {running && i === msgs.length - 1 && m.role === "assistant" && (
+                <span className="thought-bubbles" aria-hidden="true">
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span className="dot" />
+                </span>
+              )}
+            </div>
           </div>
         ))}
       </div>

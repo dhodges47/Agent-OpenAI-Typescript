@@ -32,12 +32,12 @@ export default function App() {
       <div className="app-shell">
         <main className="app-card">
           <header className="app-header">
-            <div className="app-kicker">Autonomous Intelligence Suite</div>
+            <div className="app-kicker">E-SPEC<sup className="tm">TM</sup> - Engine Size, Power, Efficiency Calculator</div>
             <h1 className="app-title">
-              ESPEC Agents <span className="app-version">v1</span>
+              E-SPEC<sup className="tm">TM</sup> Agents <span className="app-version">v1</span>
             </h1>
             <div className="app-subtitle">
-              Secure, auditable AI agent workflows for critical operations.
+              AI agent dashboard.
             </div>
           </header>
 

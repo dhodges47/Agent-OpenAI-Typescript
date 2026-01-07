@@ -18,7 +18,7 @@ export function getLlmOptions() {
   const providerOptions = parseList(env.LLM_PROVIDER_OPTIONS);
   const modelOptions = parseList(env.LLM_MODEL_OPTIONS);
   const providers = uniqueList([
-    ...(providerOptions.length ? providerOptions : ["openai", "openrouter"]),
+    ...(providerOptions.length ? providerOptions : ["openai", "openrouter", "ollama"]),
     env.LLM_PROVIDER,
   ]);
   const models = uniqueList([...(modelOptions.length ? modelOptions : [env.LLM_MODEL]), env.LLM_MODEL]);

@@ -84,6 +84,7 @@ LLM_PROVIDER=openai | openrouter
 LLM_MODEL=gpt-4.1-mini           # sample model name
 OPENAI_API_KEY=...
 OPENROUTER_API_KEY=...          # only when using OpenRouter
+OLLAMA_BASE_URL=http://localhost:11434/v1  # only when using Ollama
 ```
 
 ## Contribution guidelines (condensed)

@@ -7,10 +7,11 @@ const Env = z.object({
   DATABASE_URL: z.string(),
 
   // LLM provider switch
-  LLM_PROVIDER: z.enum(["openai", "openrouter"]).default("openai"),
+  LLM_PROVIDER: z.enum(["ollama", "openai", "openrouter"]).default("ollama"),
 
   OPENAI_API_KEY: z.string().optional(),
   OPENROUTER_API_KEY: z.string().optional(),
+  OLLAMA_BASE_URL: z.string().optional(),
 
   // model name is provider-specific; keep it configurable
   LLM_MODEL: z.string().default("gpt-5-mini"),

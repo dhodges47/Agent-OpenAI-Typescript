@@ -3,7 +3,7 @@ import { Runner, setOpenAIAPI } from "@openai/agents";
 import { OpenAIProvider } from "@openai/agents"; // OpenAIProvider is documented in the SDK API ref :contentReference[oaicite:4]{index=4}
 import { env } from "../config/env";
 
-type LlmProvider = "openai" | "openrouter";
+type LlmProvider = "openai" | "openrouter" | "ollama";
 
 const runnerCache = new Map<string, Runner>();
 
@@ -20,6 +20,13 @@ function makeOpenAIClient(provider: LlmProvider) {
         "HTTP-Referer": "http://localhost",
         "X-Title": "adk-pg-demo",
       },
+    });
+  }
+
+  if (provider === "ollama") {
+    return new OpenAI({
+      apiKey: "ollama",
+      baseURL: env.OLLAMA_BASE_URL ?? "http://localhost:11434/v1",
     });
   }
 

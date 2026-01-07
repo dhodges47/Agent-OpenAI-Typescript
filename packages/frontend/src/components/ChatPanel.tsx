@@ -13,7 +13,7 @@ type ChatPanelProps = {
 };
 
 export function ChatPanel(props: ChatPanelProps) {
-  const defaultPrompt = "What tables are available in the espec Database?";
+  const defaultPrompt = "What tables are available in the espec schema?";
   const [input, setInput] = useState(defaultPrompt);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [running, setRunning] = useState(false);

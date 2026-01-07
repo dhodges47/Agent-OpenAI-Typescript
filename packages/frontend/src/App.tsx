@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AgentPicker } from "./components/AgentPicker";
 import { ChatPanel } from "./components/ChatPanel";
 import { useAgents } from "./hooks/useAgents";
@@ -11,6 +11,16 @@ export default function App() {
   const [threadId, setThreadId] = useState(() => crypto.randomUUID());
   const [taskId, setTaskId] = useState<string | null>(null);
   const currentYear = new Date().getFullYear();
+  const [theme, setTheme] = useState(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored === "light" || stored === "dark") return stored;
+    return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   function onPickAgent(agentId: string, taskId: string) {
     setAgentId(agentId);
@@ -32,7 +42,19 @@ export default function App() {
       <div className="app-shell">
         <main className="app-card">
           <header className="app-header">
-            <div className="app-kicker">E-SPEC<sup className="tm">TM</sup> - Engine Size, Power, Efficiency Calculator</div>
+            <div className="app-header-row">
+              <div className="app-kicker">
+                E-SPEC<sup className="tm">TM</sup> - Engine Size, Power, Efficiency Calculator
+              </div>
+              <button
+                className="theme-toggle"
+                type="button"
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+              >
+                {theme === "light" ? "Dark mode" : "Light mode"}
+              </button>
+            </div>
             <h1 className="app-title">
               E-SPEC<sup className="tm">TM</sup> Agents <span className="app-version">v1</span>
             </h1>

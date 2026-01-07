@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { runAgentTaskSSE } from "../agui/client";
 
 type Msg = { role: "user" | "assistant"; text: string; at: string };
-type LlmOptions = { provider: string; model: string; providers: string[]; models: string[] };
+type LlmOptions = {
+  provider: string;
+  model: string;
+  providers: string[];
+  models: string[];
+  modelsByProvider?: Record<string, string[]>;
+};
 
 type ChatPanelProps = {
   backendUrl: string;
@@ -44,6 +52,15 @@ export function ChatPanel(props: ChatPanelProps) {
       cancelled = true;
     };
   }, [props.backendUrl]);
+
+  useEffect(() => {
+    if (!llmOptions || !selectedProvider) return;
+    const providerModels = llmOptions.modelsByProvider?.[selectedProvider] ?? llmOptions.models;
+    if (!providerModels.length) return;
+    if (!providerModels.includes(selectedModel)) {
+      setSelectedModel(providerModels[0]);
+    }
+  }, [llmOptions, selectedProvider, selectedModel]);
 
   function formatTime() {
     return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -105,6 +122,10 @@ export function ChatPanel(props: ChatPanelProps) {
     });
   }
 
+  const providerModels = llmOptions
+    ? llmOptions.modelsByProvider?.[selectedProvider] ?? llmOptions.models
+    : [];
+
   return (
     <div className="chat-panel">
       <div className="chat-status">
@@ -152,7 +173,7 @@ export function ChatPanel(props: ChatPanelProps) {
                   onChange={(e) => setSelectedModel(e.target.value)}
                   disabled={running}
                 >
-                  {llmOptions.models.map((model) => (
+                  {providerModels.map((model) => (
                     <option key={model} value={model}>
                       {model}
                     </option>
@@ -180,7 +201,22 @@ export function ChatPanel(props: ChatPanelProps) {
               <span className="chat-time">{m.at}</span>
             </div>
             <div className="chat-text">
-              {m.text}
+              {m.role === "assistant" ? (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    a: ({ href, children }) => (
+                      <a href={href} target="_blank" rel="noreferrer">
+                        {children}
+                      </a>
+                    ),
+                  }}
+                >
+                  {m.text}
+                </ReactMarkdown>
+              ) : (
+                m.text
+              )}
               {running && i === msgs.length - 1 && m.role === "assistant" && (
                 <span className="thought-bubbles" aria-hidden="true">
                   <span className="dot" />

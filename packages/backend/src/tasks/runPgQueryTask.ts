@@ -3,6 +3,7 @@ import { pgQueryAgent } from "../agents/pgQueryAgent";
 import { extractFinalStructured } from "../runner/extractFinalStructured";
 import { getRunner } from "../runner/getRunner"
 import { resolveLlmSelection } from "../llm/options";
+import { env } from "../config/env";
 
 export async function runPgQueryTask(
   req: TaskRequestById<"runPgQuery">
@@ -15,7 +16,9 @@ export async function runPgQueryTask(
 
     const userMessage = `${req.input.userText}`;
     console.log("runPgQueryTask userMessage:", userMessage);
-    const result = await runner.run(agent, userMessage);
+    const result = await runner.run(agent, userMessage, {
+      maxTurns: env.LLM_MAX_TURNS,
+    });
 
     const assistantText = extractFinalStructured(result);
     console.log("runPgQueryTask assistantText:", assistantText);

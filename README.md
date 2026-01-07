@@ -82,6 +82,8 @@ Set the following env vars (see `packages/backend/src/config/env.ts`):
 DATABASE_URL=postgres://...
 LLM_PROVIDER=openai | openrouter
 LLM_MODEL=gpt-4.1-mini           # sample model name
+LLM_MAX_TURNS=10                 # max agent turns per run
+LLM_MODEL_OPTIONS=openai:gpt-4.1-mini,openrouter:meta-llama/llama-3.1-8b-instruct,ollama:llama3.1:latest
 OPENAI_API_KEY=...
 OPENROUTER_API_KEY=...          # only when using OpenRouter
 OLLAMA_BASE_URL=http://localhost:11434/v1  # only when using Ollama

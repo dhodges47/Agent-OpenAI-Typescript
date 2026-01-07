@@ -5,6 +5,7 @@ import { extractFinalText } from "../runner/extractFinalText";
 import { normalizeMessagesForAgent } from "../runner/normalizeMessages";
 import { getRunner } from "../runner/getRunner"
 import { resolveLlmSelection } from "../llm/options";
+import { env } from "../config/env";
 
 export async function runAgentChatTask(
   req: TaskRequestById<"agentChat">
@@ -19,7 +20,9 @@ export async function runAgentChatTask(
     const normalizedHistory = normalizeMessagesForAgent(history);
 
 
-    const result = await runner.run(agent, normalizedHistory as any);
+    const result = await runner.run(agent, normalizedHistory as any, {
+      maxTurns: env.LLM_MAX_TURNS,
+    });
 
     const assistantText = extractFinalText(result);
 

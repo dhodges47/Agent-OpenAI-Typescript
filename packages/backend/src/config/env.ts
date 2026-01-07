@@ -15,6 +15,7 @@ const Env = z.object({
 
   // model name is provider-specific; keep it configurable
   LLM_MODEL: z.string().default("gpt-5-mini"),
+  LLM_MAX_TURNS: z.coerce.number().int().min(1).max(50).default(10),
   LLM_PROVIDER_OPTIONS: z.string().optional(),
   LLM_MODEL_OPTIONS: z.string().optional(),
 });

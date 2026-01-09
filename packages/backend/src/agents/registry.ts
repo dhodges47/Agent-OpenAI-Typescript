@@ -1,5 +1,8 @@
 import { pgQueryAgent } from "./pgQueryAgent";
 import { agentChatAgent } from "./agentChatAgent";
+import { anomalyStatusAgent } from "./anomalyStatusAgent";
+import { anomalyReviewAgent } from "./anomalyReviewAgent";
+import { engineDiscoveryAgent } from "./engineDiscoveryAgent";
 import type { AgentDescriptor } from "./types";
 
 export const agentDefinitions = {
@@ -16,6 +19,27 @@ export const agentDefinitions = {
     capabilities: ["read-db", "schema-introspection", "summarize-results"],
     factory: pgQueryAgent,
     taskId: "runPgQuery"
+  },
+  anomalyStatus: {
+    name: "Anomaly Status Writer",
+    description: "Update anomaly_status for a single engine_specs_main row.",
+    capabilities: ["update-anomaly-status"],
+    factory: anomalyStatusAgent,
+    taskId: "runUpdateAnomalyStatus"
+  },
+  anomalyReview: {
+    name: "Anomaly Review Agent",
+    description: "Batch-review pending engine specs and set anomaly_status to passed/failed.",
+    capabilities: ["read-db", "update-anomaly-status"],
+    factory: anomalyReviewAgent,
+    taskId: "runAnomalyReview"
+  },
+  engineDiscovery: {
+    name: "Engine Discovery Agent",
+    description: "Find new engine candidates from web sources and deduplicate against existing specs.",
+    capabilities: ["read-db", "web-fetch", "summarize-results"],
+    factory: engineDiscoveryAgent,
+    taskId: "runEngineDiscovery"
   },
   // later:
   // engineAdmin: { capabilities: ["read-db","schema-introspection","write-engine-domain"] ... }

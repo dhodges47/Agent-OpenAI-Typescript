@@ -1,0 +1,515 @@
+{
+  "ruleset": {
+    "name": "engine_specs_reasonableness_checks",
+    "version": "1.0.0",
+    "units": {
+      "displacement_l": "L",
+      "bore_mm": "mm",
+      "stroke_mm": "mm",
+      "power_hp": "hp",
+      "torque_lbft": "lb-ft",
+      "boost_psi": "psi",
+      "boost_bar": "bar",
+      "rpm": "rpm",
+      "compression_ratio": "ratio"
+    },
+    "conventions": {
+      "severity_levels": [
+        "error",
+        "warn",
+        "info"
+      ],
+      "null_handling": "If any required field is missing/null, the rule returns 'skip' unless otherwise stated.",
+      "tolerances": {
+        "displacement_match_pct": 0.03,
+        "floating_ratio_epsilon": 0.02
+      }
+    },
+    "helpers": {
+      "computed_fields": [
+        {
+          "name": "calc_displacement_l",
+          "requires": [
+            "bore_mm",
+            "stroke_mm",
+            "num_cylinders"
+          ],
+          "expression": "PI * POW((bore_mm/1000)/2,2) * (stroke_mm/1000) * num_cylinders * 1000"
+        },
+        {
+          "name": "specific_output_hp_per_l",
+          "requires": [
+            "power_hp",
+            "displacement_l"
+          ],
+          "expression": "power_hp / displacement_l"
+        },
+        {
+          "name": "torque_per_l_lbft_per_l",
+          "requires": [
+            "torque_lbft",
+            "displacement_l"
+          ],
+          "expression": "torque_lbft / displacement_l"
+        },
+        {
+          "name": "bore_stroke_ratio",
+          "requires": [
+            "bore_mm",
+            "stroke_mm"
+          ],
+          "expression": "bore_mm / stroke_mm"
+        },
+        {
+          "name": "mean_piston_speed_mps",
+          "requires": [
+            "stroke_mm",
+            "redline_rpm"
+          ],
+          "expression": "2 * (stroke_mm/1000) * (redline_rpm/60)"
+        },
+        {
+          "name": "hp_at_redline_from_torque",
+          "requires": [
+            "torque_lbft",
+            "redline_rpm"
+          ],
+          "expression": "(torque_lbft * redline_rpm) / 5252"
+        },
+        {
+          "name": "boost_psi_normalized",
+          "requires_any": [
+            "max_boost_psi",
+            "max_boost_bar"
+          ],
+          "expression": "IF(max_boost_psi != null, max_boost_psi, max_boost_bar * 14.5038)"
+        }
+      ]
+    },
+    "rules": [
+      {
+        "id": "geom_displacement_matches_bore_stroke_cyl",
+        "title": "Displacement matches bore/stroke/cylinders (within tolerance)",
+        "severity": "error",
+        "requires": [
+          "displacement_l",
+          "bore_mm",
+          "stroke_mm",
+          "num_cylinders"
+        ],
+        "when": "displacement_l > 0 AND bore_mm > 0 AND stroke_mm > 0 AND num_cylinders >= 1",
+        "check": "ABS(calc_displacement_l - displacement_l) / displacement_l <= tolerances.displacement_match_pct",
+        "message_on_fail": "Computed displacement from bore/stroke/cylinders differs from listed displacement beyond tolerance."
+      },
+      {
+        "id": "geom_bore_stroke_sane_ranges",
+        "title": "Bore and stroke in plausible ranges",
+        "severity": "warn",
+        "requires": [
+          "bore_mm",
+          "stroke_mm"
+        ],
+        "when": "bore_mm != null OR stroke_mm != null",
+        "checks": [
+          {
+            "check": "bore_mm == null OR (bore_mm >= 50 AND bore_mm <= 130)",
+            "message_on_fail": "Bore (mm) is outside typical passenger/light-duty range (50–130mm)."
+          },
+          {
+            "check": "stroke_mm == null OR (stroke_mm >= 40 AND stroke_mm <= 140)",
+            "message_on_fail": "Stroke (mm) is outside typical passenger/light-duty range (40–140mm)."
+          }
+        ]
+      },
+      {
+        "id": "geom_bore_stroke_ratio_extremes",
+        "title": "Bore/stroke ratio not extremely unusual",
+        "severity": "warn",
+        "requires": [
+          "bore_mm",
+          "stroke_mm"
+        ],
+        "when": "bore_mm > 0 AND stroke_mm > 0",
+        "checks": [
+          {
+            "check": "bore_stroke_ratio >= 0.70 AND bore_stroke_ratio <= 1.40",
+            "message_on_fail": "Bore/stroke ratio is unusually extreme (<0.70 very undersquare, >1.40 very oversquare)."
+          }
+        ]
+      },
+      {
+        "id": "stroke_type_consistency",
+        "title": "Stroke type consistent with bore/stroke ratio",
+        "severity": "info",
+        "requires": [
+          "stroke_type",
+          "bore_mm",
+          "stroke_mm"
+        ],
+        "when": "stroke_type != null AND bore_mm > 0 AND stroke_mm > 0",
+        "checks": [
+          {
+            "check": "stroke_type != 'Long Stroke' OR bore_stroke_ratio <= 1.00",
+            "message_on_fail": "Stroke Type is 'Long Stroke' but bore >= stroke suggests not long-stroke."
+          },
+          {
+            "check": "stroke_type != 'Short Stroke' OR bore_stroke_ratio >= 1.00",
+            "message_on_fail": "Stroke Type is 'Short Stroke' but stroke >= bore suggests not short-stroke."
+          }
+        ]
+      },
+      {
+        "id": "compression_by_fuel_type",
+        "title": "Compression ratio plausible by fuel type",
+        "severity": "error",
+        "requires": [
+          "compression_ratio",
+          "fuel_type"
+        ],
+        "when": "compression_ratio > 0 AND fuel_type != null",
+        "checks": [
+          {
+            "check": "fuel_type != 'Diesel' OR (compression_ratio >= 14 AND compression_ratio <= 25)",
+            "message_on_fail": "Diesel compression ratio should usually be ~14:1–25:1."
+          },
+          {
+            "check": "fuel_type != 'Gasoline' OR (compression_ratio >= 8 AND compression_ratio <= 14)",
+            "message_on_fail": "Gasoline compression ratio should usually be ~8:1–14:1."
+          },
+          {
+            "check": "fuel_type != 'E85' OR (compression_ratio >= 9 AND compression_ratio <= 15)",
+            "message_on_fail": "E85 compression ratio should usually be ~9:1–15:1."
+          }
+        ]
+      },
+      {
+        "id": "compression_vs_aspiration",
+        "title": "Compression ratio plausible by aspiration type",
+        "severity": "warn",
+        "requires": [
+          "compression_ratio",
+          "aspiration"
+        ],
+        "when": "compression_ratio > 0 AND aspiration != null",
+        "checks": [
+          {
+            "check": "aspiration NOT IN ['Turbocharged', 'Supercharged'] OR compression_ratio <= 12.0",
+            "message_on_fail": "Forced induction engines with very high compression (>12:1) are uncommon without special tech; verify."
+          },
+          {
+            "check": "aspiration != 'Naturally Aspirated' OR compression_ratio >= 8.5",
+            "message_on_fail": "Naturally aspirated engines with very low compression are uncommon; verify fuel/era."
+          }
+        ]
+      },
+      {
+        "id": "boost_present_only_if_forced_induction",
+        "title": "Boost only present for forced induction",
+        "severity": "error",
+        "requires_any": [
+          "max_boost_psi",
+          "max_boost_bar"
+        ],
+        "when": "boost_psi_normalized != null",
+        "check": "aspiration IN ['Turbocharged', 'Supercharged']",
+        "message_on_fail": "Boost pressure provided but aspiration is not turbocharged/supercharged."
+      },
+      {
+        "id": "boost_plausible_range",
+        "title": "Boost pressure plausible range",
+        "severity": "warn",
+        "requires_any": [
+          "max_boost_psi",
+          "max_boost_bar"
+        ],
+        "when": "boost_psi_normalized != null",
+        "checks": [
+          {
+            "check": "boost_psi_normalized >= 0 AND boost_psi_normalized <= 45",
+            "message_on_fail": "Boost pressure is outside typical production range (0–45 psi). Verify units/data source."
+          }
+        ]
+      },
+      {
+        "id": "power_specific_output_plausible",
+        "title": "Specific output (hp/L) plausible by fuel and aspiration",
+        "severity": "warn",
+        "requires": [
+          "power_hp",
+          "displacement_l",
+          "fuel_type",
+          "aspiration"
+        ],
+        "when": "power_hp > 0 AND displacement_l > 0 AND fuel_type != null AND aspiration != null",
+        "checks": [
+          {
+            "check": "NOT(fuel_type == 'Gasoline' AND aspiration == 'Naturally Aspirated') OR (specific_output_hp_per_l >= 40 AND specific_output_hp_per_l <= 140)",
+            "message_on_fail": "Gasoline NA hp/L is outside typical range (~40–140)."
+          },
+          {
+            "check": "NOT(fuel_type == 'Gasoline' AND aspiration IN ['Turbocharged','Supercharged']) OR (specific_output_hp_per_l >= 70 AND specific_output_hp_per_l <= 220)",
+            "message_on_fail": "Gasoline forced-induction hp/L is outside typical range (~70–220)."
+          },
+          {
+            "check": "fuel_type != 'Diesel' OR (specific_output_hp_per_l >= 20 AND specific_output_hp_per_l <= 120)",
+            "message_on_fail": "Diesel hp/L is outside typical range (~20–120)."
+          }
+        ]
+      },
+      {
+        "id": "torque_per_l_plausible",
+        "title": "Torque per liter plausible by fuel and aspiration",
+        "severity": "warn",
+        "requires": [
+          "torque_lbft",
+          "displacement_l",
+          "fuel_type",
+          "aspiration"
+        ],
+        "when": "torque_lbft > 0 AND displacement_l > 0 AND fuel_type != null AND aspiration != null",
+        "checks": [
+          {
+            "check": "fuel_type != 'Gasoline' OR (torque_per_l_lbft_per_l >= 40 AND torque_per_l_lbft_per_l <= 180)",
+            "message_on_fail": "Gasoline torque/L is outside a broad plausible range (~40–180 lb-ft/L)."
+          },
+          {
+            "check": "fuel_type != 'Diesel' OR (torque_per_l_lbft_per_l >= 60 AND torque_per_l_lbft_per_l <= 300)",
+            "message_on_fail": "Diesel torque/L is outside a broad plausible range (~60–300 lb-ft/L)."
+          }
+        ]
+      },
+      {
+        "id": "hp_torque_rpm_relationship_redline",
+        "title": "HP implied by torque at redline is not wildly inconsistent",
+        "severity": "info",
+        "requires": [
+          "power_hp",
+          "torque_lbft",
+          "redline_rpm"
+        ],
+        "when": "power_hp > 0 AND torque_lbft > 0 AND redline_rpm > 0",
+        "check": "hp_at_redline_from_torque <= power_hp * 1.50 AND hp_at_redline_from_torque >= power_hp * 0.40",
+        "message_on_fail": "Torque and redline imply HP far from listed power; verify whether torque is peak torque and redline is correct."
+      },
+      {
+        "id": "redline_plausible_by_stroke_and_valvetrain",
+        "title": "Redline plausible given stroke and valvetrain",
+        "severity": "warn",
+        "requires": [
+          "redline_rpm",
+          "stroke_mm",
+          "valvetrain"
+        ],
+        "when": "redline_rpm > 0",
+        "checks": [
+          {
+            "check": "stroke_mm == null OR mean_piston_speed_mps <= 25",
+            "message_on_fail": "Mean piston speed at redline exceeds ~25 m/s (typical production limit). Verify stroke/redline."
+          },
+          {
+            "check": "valvetrain == null OR valvetrain NOT IN ['OHV','Pushrod'] OR redline_rpm <= 7200",
+            "message_on_fail": "Pushrod/OHV engine redline above ~7200 rpm is unusual; verify."
+          }
+        ]
+      },
+      {
+        "id": "max_rpm_vs_redline",
+        "title": "Maximum RPM should be >= redline",
+        "severity": "error",
+        "requires": [
+          "max_rpm",
+          "redline_rpm"
+        ],
+        "when": "max_rpm != null AND redline_rpm != null",
+        "check": "max_rpm >= redline_rpm",
+        "message_on_fail": "Maximum RPM is lower than redline; fields may be swapped or mis-entered."
+      },
+      {
+        "id": "cylinders_vs_displacement_plausible",
+        "title": "Cylinder count and displacement pairing plausible",
+        "severity": "warn",
+        "requires": [
+          "num_cylinders",
+          "displacement_l"
+        ],
+        "when": "num_cylinders >= 1 AND displacement_l > 0",
+        "checks": [
+          {
+            "check": "NOT(num_cylinders <= 2) OR displacement_l <= 1.5",
+            "message_on_fail": "1–2 cylinder engines above ~1.5L are uncommon; verify application."
+          },
+          {
+            "check": "NOT(num_cylinders == 3) OR (displacement_l >= 0.6 AND displacement_l <= 1.8)",
+            "message_on_fail": "3-cylinder engines typically fall ~0.6–1.8L; verify."
+          },
+          {
+            "check": "NOT(num_cylinders == 4) OR (displacement_l >= 0.9 AND displacement_l <= 3.5)",
+            "message_on_fail": "Inline-4 engines typically fall ~0.9–3.5L; verify."
+          },
+          {
+            "check": "NOT(num_cylinders == 6) OR (displacement_l >= 2.0 AND displacement_l <= 4.5)",
+            "message_on_fail": "6-cylinder engines typically fall ~2.0–4.5L; verify."
+          },
+          {
+            "check": "NOT(num_cylinders == 8) OR (displacement_l >= 3.0 AND displacement_l <= 8.5)",
+            "message_on_fail": "V8 engines typically fall ~3.0–8.5L; verify."
+          },
+          {
+            "check": "NOT(num_cylinders >= 10) OR displacement_l >= 3.5",
+            "message_on_fail": "10+ cylinder engines usually exceed ~3.5L; verify."
+          }
+        ]
+      },
+      {
+        "id": "cylinder_config_matches_count",
+        "title": "Cylinder configuration consistent with cylinder count",
+        "severity": "error",
+        "requires": [
+          "num_cylinders",
+          "cylinder_configuration"
+        ],
+        "when": "num_cylinders >= 1 AND cylinder_configuration != null",
+        "checks": [
+          {
+            "check": "!REGEX_MATCH(LOWER(cylinder_configuration), 'inline|in[- ]?line') OR num_cylinders IN [2,3,4,5,6]",
+            "message_on_fail": "Inline configuration is uncommon for this cylinder count; verify."
+          },
+          {
+            "check": "cylinder_configuration != 'V' OR num_cylinders IN [4,6,8,10,12,16]",
+            "message_on_fail": "V configuration usually uses even cylinder counts (common: 6/8/10/12)."
+          },
+          {
+            "check": "cylinder_configuration NOT IN ['Flat','Boxer'] OR num_cylinders IN [2,4,6]",
+            "message_on_fail": "Flat/boxer configuration usually appears as 2/4/6 cylinders."
+          },
+          {
+            "check": "cylinder_configuration != 'W' OR num_cylinders IN [8,12,16]",
+            "message_on_fail": "W configuration is usually 8/12/16 cylinders; verify."
+          }
+        ]
+      },
+      {
+        "id": "ignition_matches_fuel_type",
+        "title": "Ignition type matches fuel type",
+        "severity": "error",
+        "requires": [
+          "fuel_type",
+          "ignition_type"
+        ],
+        "when": "fuel_type != null AND ignition_type != null",
+        "checks": [
+          {
+            "check": "fuel_type != 'Diesel' OR ignition_type IN ['Compression Ignition','CI']",
+            "message_on_fail": "Diesel engines are compression ignition; spark ignition entry is likely wrong."
+          },
+          {
+            "check": "fuel_type IN ['Gasoline','E85'] OR ignition_type NOT IN ['Spark Ignition','SI']",
+            "message_on_fail": "Non-gasoline engines listing spark ignition should be verified (exceptions exist)."
+          }
+        ]
+      },
+      {
+        "id": "cooling_plausible_for_output",
+        "title": "Cooling system plausible for output density",
+        "severity": "warn",
+        "requires": [
+          "cooling_system",
+          "power_hp",
+          "displacement_l"
+        ],
+        "when": "cooling_system != null AND power_hp > 0 AND displacement_l > 0",
+        "checks": [
+          {
+            "check": "cooling_system != 'Air' OR specific_output_hp_per_l <= 90",
+            "message_on_fail": "Air-cooled with high hp/L is uncommon; verify cooling type or output."
+          }
+        ]
+      },
+      {
+        "id": "fuel_system_consistency",
+        "title": "Fuel system consistent with fuel type and aspiration",
+        "severity": "warn",
+        "requires": [
+          "fuel_system",
+          "fuel_type",
+          "aspiration"
+        ],
+        "when": "fuel_system != null AND fuel_type != null AND aspiration != null",
+        "checks": [
+          {
+            "check": "fuel_type != 'Diesel' OR fuel_system NOT IN ['Carburetor','Carb']",
+            "message_on_fail": "Diesel engines do not use carburetors; verify fuel system."
+          },
+          {
+            "check": "aspiration != 'Turbocharged' OR fuel_system != 'Carburetor'",
+            "message_on_fail": "Turbo + carburetor is unusual for modern engines; verify era/application."
+          }
+        ]
+      },
+      {
+        "id": "aspiration_required_for_boost_fields",
+        "title": "Aspiration value required when boost field present",
+        "severity": "warn",
+        "requires_any": [
+          "max_boost_psi",
+          "max_boost_bar"
+        ],
+        "when": "boost_psi_normalized != null",
+        "check": "aspiration != null AND aspiration != ''",
+        "message_on_fail": "Boost is present but aspiration is missing; set aspiration to Turbocharged/Supercharged if applicable."
+      },
+      {
+        "id": "max_rpm_reasonable_upper_bound",
+        "title": "Max RPM not absurdly high for ICE",
+        "severity": "warn",
+        "requires": [
+          "max_rpm"
+        ],
+        "when": "max_rpm != null",
+        "check": "max_rpm >= 500 AND max_rpm <= 12000",
+        "message_on_fail": "Max RPM outside broad plausible ICE range (500–12000). Verify units/data."
+      },
+      {
+        "id": "manufacturer_name_present",
+        "title": "Manufacturer present and non-generic",
+        "severity": "warn",
+        "requires": [
+          "manufacturer"
+        ],
+        "when": "manufacturer != null",
+        "checks": [
+          {
+            "check": "LEN(TRIM(manufacturer)) >= 2",
+            "message_on_fail": "Manufacturer appears empty/too short."
+          },
+          {
+            "check": "LOWER(TRIM(manufacturer)) NOT IN ['unknown','n/a','na','-','none']",
+            "message_on_fail": "Manufacturer is a placeholder value."
+          }
+        ]
+      },
+      {
+        "id": "engine_name_present",
+        "title": "Engine name present and non-placeholder",
+        "severity": "info",
+        "requires": [
+          "engine_name"
+        ],
+        "when": "engine_name != null",
+        "check": "LOWER(TRIM(engine_name)) NOT IN ['unknown','n/a','na','-','none']",
+        "message_on_fail": "Engine name is a placeholder value."
+      },
+      {
+        "id": "engine_code_present",
+        "title": "Engine code present and non-placeholder",
+        "severity": "info",
+        "requires": [
+          "engine_code"
+        ],
+        "when": "engine_code != null",
+        "check": "LOWER(TRIM(engine_code)) NOT IN ['unknown','n/a','na','-','none']",
+        "message_on_fail": "Engine code is a placeholder value."
+      }
+    ]
+  }
+}

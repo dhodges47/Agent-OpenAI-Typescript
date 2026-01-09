@@ -1,6 +1,15 @@
-export type AgentId = "pgQuery";
+export type AgentId =
+  | "pgQuery"
+  | "anomalyStatus"
+  | "anomalyReview"
+  | "engineDiscovery";
 
-export type TaskId = "agentChat" | "runPgQuery";
+export type TaskId =
+  | "agentChat"
+  | "runPgQuery"
+  | "runUpdateAnomalyStatus"
+  | "runAnomalyReview"
+  | "runEngineDiscovery";
 
 
 export type TaskRequest =
@@ -12,7 +21,25 @@ export type TaskRequest =
   }
   | {
     taskId: "runPgQuery";
-     agentId: string;
+    agentId: string;
+    threadId: string;
+    input: { userText: string; llm?: { provider?: string; model?: string } };
+  }
+  | {
+    taskId: "runUpdateAnomalyStatus";
+    agentId: string;
+    threadId: string;
+    input: { userText: string; llm?: { provider?: string; model?: string } };
+  }
+  | {
+    taskId: "runAnomalyReview";
+    agentId: string;
+    threadId: string;
+    input: { userText: string; llm?: { provider?: string; model?: string } };
+  }
+  | {
+    taskId: "runEngineDiscovery";
+    agentId: string;
     threadId: string;
     input: { userText: string; llm?: { provider?: string; model?: string } };
   };

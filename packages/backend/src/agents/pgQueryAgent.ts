@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { pool } from "../db/pool";
+import { createEngineSimilarityCheckTool } from "./tools/engineSimilarityTool";
 import { env } from "../config/env";
 import { Agent, tool } from "@openai/agents";
 
@@ -64,12 +65,14 @@ const SqlParam = z.union([z.string(), z.number(), z.boolean(), z.null()]);
   },
 });
 
+  const engineSimilarityCheck = createEngineSimilarityCheckTool();
+
   const resolvedModel = model ?? env.LLM_MODEL;
 
   return new Agent({
     name: "Postgres Query Agent",
     model: resolvedModel,
-    tools: [pgIntrospectSchema, pgReadonlyQuery],
+    tools: [pgIntrospectSchema, pgReadonlyQuery, engineSimilarityCheck],
     instructions: [
       "You help the user explore a Postgres database.",
       "You may inspect the database schema using pg_introspect_schema.",
